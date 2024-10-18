@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Squash Game</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: monospace;
+      background-image: url('https://i.suar.me/v4Ogq/l'); /* رابط الخلفية */
+      background-size: cover;
+      background-position: center;
+    }
+    h1 {
+      font-size: 5vw; /* حجم خط قابل للتغيير */
+      margin-bottom: 2vh;
+      color: white; /* لون النص */
+    }
+    canvas {
+      background-color: rgba(0, 0, 0, 0.5); /* لون خلفية القماش مع الشفافية */
+      width: 90vw; /* جعل القماش متجاوب */
+      height: auto; /* الحفاظ على نسبة العرض إلى الارتفاع */
+      max-width: 400px;
+      max-height: 400px;
+      border: 2px solid white; /* إضافة إطار للوحة */
+    }
+    .buttons {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+    #play_button {
+      margin-top: 2vh;
+      padding: 2vh 5vw;
+      border: none;
+      background-color: blueviolet;
+      color: white;
+      font-size: 4vw; /* حجم خط قابل للتغيير */
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #play_button:hover {
+      background-color: darkviolet;
+    }
+    #play_button:disabled {
+      color: rgb(155, 155, 155);
+      background-color: gray;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 6vw;
+      }
+      #play_button {
+        font-size: 5vw;
+        padding: 2vh 7vw;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 7vw;
+      }
+      #play_button {
+        font-size: 6vw;
+        padding: 2vh 10vw;
+      }
+    }
+
+    .project-title {
+      position: absolute;
+      top: 20px; /* التحكم في موضع الاسم */
+      color: white; /* لون النص */
+      font-size: 4vw; /* حجم خط قابل للتغيير */
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5); /* تأثير الظل */
+    }
+
+    .logo {
+      position: absolute;
+      top: 80px; /* التحكم في موضع الشعار */
+      width: 100px; /* عرض الشعار */
+      height: auto; /* الحفاظ على نسبة العرض إلى الارتفاع */
+    }
+  </style>
+</head>
+<body>
+  <h1 class="project-title">ADScoins</h1>
+  <img src="https://i.suar.me/2GLP4/l" alt="Logo" class="logo"> <!-- رابط الشعار -->
+  <canvas id="canvas" height="250px" width="250px"></canvas>
+  <div class="buttons">
+    <button id="play_button" onclick="play()">Play</button>
+  </div>
+
+  <script>
+    'use strict';
+
+    const play_button = document.querySelector("#play_button");
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const canvas_width = canvas.width;
+    const canvas_height = canvas.height;
+
+    const paddle_width = 50;
+    const paddle_height = 10;
+    let paddleX;
+    let leftPressed = false;
+    let rightPressed = false;
+
+    const ball_size = 15;
+    let x;
+    let y;
+    let dx;
+    let dy;
+
+    let score;
+    let level;
+    let levelSpeedMultiplier;
+
+    const ballImage = new Image();
+    ballImage.src = "https://i.suar.me/2GLP4/l"; // رابط الصورة 
+
+    function drawBall() {
+      ctx.drawImage(ballImage, x - ball_size, y - ball_size, ball_size * 2, ball_size * 2);
+    }
+
+    function drawPaddle() {
+      ctx.beginPath();
+      ctx.rect(paddleX, canvas_height - 20, paddle_width, paddle_height);
+      ctx.fillStyle = "rgb(255,255,255)";
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function drawScore() {
+      ctx.font = "16px Monospace";
+      ctx.fillStyle = "rgb(255,255,255)";
+      ctx.fillText(`Score: ${score}`, 8, 20);
+    }
+
+    function drawLevel() {
+      ctx.font = "16px Monospace";
+      ctx.fillStyle = "rgb(255,255,255)";
+      ctx.fillText(`Level: ${level}`, 8, 40);
+    }
+
+    function drawGameOver() {
+      ctx.font = "24px Monospace";
+      ctx.fillStyle = "rgb(255,255,255)";
+      ctx.fillText("GAME OVER", (canvas_width - 100) / 2, canvas_height / 2, 100);
+    }
+
+    function keyDownHandler(e) {
+      if (e.key === "Right" || e.key === "ArrowRight") {
+        rightPressed = true;
+        leftPressed = false;
+      }
+      if (e.key === "Left" || e.key === "ArrowLeft") {
+        rightPressed = false;
+        leftPressed = true;
+      }
+    }
+
+    function keyUpHandler(e) {
+      if (e.key === "Right" || e.key === "ArrowRight") {
+        rightPressed = false;
+      }
+      if (e.key === "Left" || e.key === "ArrowLeft") {
+        leftPressed = false;
+      }
+    }
+
+    function mouseMoveHandler(e) {
+      const relativeX = e.clientX - canvas.offsetLeft;
+      if (relativeX > 0 && relativeX < canvas.width) {
+        paddleX = relativeX - paddle_width / 2;
+      }
+    }
+
+    function touchHandler(e) {
+      if (e.touches) {
+        const relativeX = e.touches[0].pageX - canvas.offsetLeft;
+        if (relativeX > 0 && relativeX < canvas.width) {
+          paddleX = relativeX - paddle_width / 2;
+        }
+      }
+    }
+
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+    document.addEventListener("mousemove", mouseMoveHandler, false);
+    document.addEventListener("touchstart", touchHandler);
+    document.addEventListener("touchmove", touchHandler);
+
+    function getNextLevelScore(currentLevel) {
+      const levelScores = [75, 150, 300, 600, 1200, 2400]; // نقاط الانتقال لكل مستوى
+      return levelScores[currentLevel] || Infinity; // إرجاع نقاط المستوى التالي
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas_width, canvas_height);
+      drawBall();
+      drawPaddle();
+      drawScore();
+      drawLevel();
+
+      if (x + dx < 0 || x + dx > canvas_width - ball_size * 2) {
+        dx = -dx;
+      }
+
+      if (y + dy < 0) {
+        dy = -dy;
+      } else if (y + dy > canvas_height - 3 * ball_size) {
+        if (x > paddleX - ball_size && x < paddleX + paddle_width + ball_size) {
+          dy = -dy;
+          score += 5; // إضافة 5 نقاط عند الاصطدام
+
+          const nextLevelScore = getNextLevelScore(level);
+          if (score >= nextLevelScore) {
+            level += 1; // الانتقال إلى المستوى التالي
+            levelSpeedMultiplier = 1 + (level * 0.1); // زيادة سرعة الكرة مع كل مستوى
+            dx *= levelSpeedMultiplier; // زيادة سرعة الكرة
+            dy *= levelSpeedMultiplier; // زيادة سرعة الكرة
+          }
+        } else {
+          drawGameOver();
+          play_button.disabled = false;
+          return;
+        }
+      }
+
+      if (rightPressed) {
+        paddleX = Math.min(paddleX + 7, canvas_width - paddle_width);
+      }
+      if (leftPressed) {
+        paddleX = Math.max(paddleX - 7, 0);
+      }
+
+      x += dx;
+      y += dy;
+
+      requestAnimationFrame(draw);
+    }
+
+    function play() {
+      play_button.innerText = "Restart";
+      play_button.disabled = true;
+      x = Math.random() * canvas_width;
+      y = Math.random() * canvas_height / 3;
+      dx = 3;
+      dy = 3;
+      level = 0; // بدء من المستوى 0
+      score = 0; // بدء من 0 نقطة
+      levelSpeedMultiplier = 1;
+
+      draw();
+    }
+  </script>
+</body>
+</html>
