@@ -13,22 +13,22 @@
       justify-content: center;
       align-items: center;
       font-family: monospace;
-      background-image: url('https://i.suar.me/v4Ogq/l'); /* رابط الخلفية */
+      background-image: url('https://i.suar.me/v4Ogq/l');
       background-size: cover;
       background-position: center;
     }
     h1 {
-      font-size: 5vw; /* حجم خط قابل للتغيير */
+      font-size: 5vw;
       margin-bottom: 2vh;
-      color: white; /* لون النص */
+      color: white;
     }
     canvas {
-      background-color: rgba(0, 0, 0, 0.5); /* لون خلفية القماش مع الشفافية */
-      width: 90vw; /* جعل القماش متجاوب */
-      height: auto; /* الحفاظ على نسبة العرض إلى الارتفاع */
+      background-color: rgba(0, 0, 0, 0.5);
+      width: 90vw;
+      height: auto;
       max-width: 400px;
       max-height: 400px;
-      border: 2px solid white; /* إضافة إطار للوحة */
+      border: 2px solid white;
     }
     .buttons {
       display: flex;
@@ -41,7 +41,7 @@
       border: none;
       background-color: blueviolet;
       color: white;
-      font-size: 4vw; /* حجم خط قابل للتغيير */
+      font-size: 4vw;
       border-radius: 8px;
       cursor: pointer;
       transition: background-color 0.3s ease;
@@ -76,23 +76,23 @@
 
     .project-title {
       position: absolute;
-      top: 20px; /* التحكم في موضع الاسم */
-      color: white; /* لون النص */
-      font-size: 4vw; /* حجم خط قابل للتغيير */
-      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5); /* تأثير الظل */
+      top: 20px;
+      color: white;
+      font-size: 4vw;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
     }
 
     .logo {
       position: absolute;
-      top: 80px; /* التحكم في موضع الشعار */
-      width: 100px; /* عرض الشعار */
-      height: auto; /* الحفاظ على نسبة العرض إلى الارتفاع */
+      top: 80px;
+      width: 100px;
+      height: auto;
     }
   </style>
 </head>
 <body>
   <h1 class="project-title">ADScoins</h1>
-  <img src="https://i.suar.me/2GLP4/l" alt="Logo" class="logo"> <!-- رابط الشعار -->
+  <img src="https://i.suar.me/2GLP4/l" alt="Logo" class="logo">
   <canvas id="canvas" height="250px" width="250px"></canvas>
   <div class="buttons">
     <button id="play_button" onclick="play()">Play</button>
@@ -102,7 +102,6 @@
     'use strict';
 
     const play_button = document.querySelector("#play_button");
-
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const canvas_width = canvas.width;
@@ -125,7 +124,7 @@
     let levelSpeedMultiplier;
 
     const ballImage = new Image();
-    ballImage.src = "https://i.suar.me/2GLP4/l"; // رابط الصورة 
+    ballImage.src = "https://i.suar.me/2GLP4/l";
 
     function drawBall() {
       ctx.drawImage(ballImage, x - ball_size, y - ball_size, ball_size * 2, ball_size * 2);
@@ -200,8 +199,8 @@
     document.addEventListener("touchmove", touchHandler);
 
     function getNextLevelScore(currentLevel) {
-      const levelScores = [75, 150, 300, 600, 1200, 2400]; // نقاط الانتقال لكل مستوى
-      return levelScores[currentLevel] || Infinity; // إرجاع نقاط المستوى التالي
+      const levelScores = [75, 150, 300, 600, 1200, 2400];
+      return levelScores[currentLevel] || Infinity;
     }
 
     function draw() {
@@ -220,18 +219,19 @@
       } else if (y + dy > canvas_height - 3 * ball_size) {
         if (x > paddleX - ball_size && x < paddleX + paddle_width + ball_size) {
           dy = -dy;
-          score += 5; // إضافة 5 نقاط عند الاصطدام
+          score += 5;
 
           const nextLevelScore = getNextLevelScore(level);
           if (score >= nextLevelScore) {
-            level += 1; // الانتقال إلى المستوى التالي
-            levelSpeedMultiplier = 1 + (level * 0.1); // زيادة سرعة الكرة مع كل مستوى
-            dx *= levelSpeedMultiplier; // زيادة سرعة الكرة
-            dy *= levelSpeedMultiplier; // زيادة سرعة الكرة
+            level += 1;
+            levelSpeedMultiplier = 1 + (level * 0.1);
+            dx *= levelSpeedMultiplier;
+            dy *= levelSpeedMultiplier;
           }
         } else {
           drawGameOver();
           play_button.disabled = false;
+          updatePoints(score); // تحديث النقاط في السكربت المحفوظ
           return;
         }
       }
@@ -256,11 +256,18 @@
       y = Math.random() * canvas_height / 3;
       dx = 3;
       dy = 3;
-      level = 0; // بدء من المستوى 0
-      score = 0; // بدء من 0 نقطة
+      level = 0;
+      score = 0;
       levelSpeedMultiplier = 1;
 
       draw();
+    }
+
+    function updatePoints(points) {
+      // استدعاء الدالة لتحديث النقاط في السكربت المحفوظ
+      let currentPoints = localStorage.getItem('userPoints') ? parseInt(localStorage.getItem('userPoints')) : 0;
+      currentPoints += points;
+      localStorage.setItem('userPoints', currentPoints);
     }
   </script>
 </body>
